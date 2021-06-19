@@ -5,6 +5,7 @@ database:
   password: "minecraft"
   database: "minecraft"
 bot-token: ""
+xapi-token: ""
 
 link:
   max-accounts-linked: 3
@@ -13,45 +14,23 @@ link:
 
 # Servidor de Discord
 discord-guild: "442668326888669195"
-member-role: "442668326888669195"
+member-role: "442669542465077249"
 
 # Canales de texto
 link-channel: "695992710699679794"
-staffchat-channel: "442679632928571394"
-adminchat-channel: "701226195466846258"
-logstaffchat-channel: "700410011834122260"
-logadminchat-channel: "700482664016379986"
 log-channel: "708762845428449351"
-vc-channels:
-  - "695008534299017286": "442671451594555402" # TC - VC
-  - "695081657207619584": "442671526635110401"
-  - "695082887946436645": "442671590094798858"
+
+linked-channels-map:
+  # Text Channel: Voice Channel
+  # Blue Club
+  - "741333810200707163": "442671451594555402"
+  # Red Club
+  - "741333878194569216": "442671526635110401"
+  # Green Club
+  - "741333891431923872": "442671590094798858"
+  # Orange Club
   - "695083006611816458": "509841329761681409"
+  # Purple Club
   - "695083119740715119": "694999389315530803"
-  - "695083251991052308": "694999418008502387"
-
-vc-channels-colors:
-  695008534299017286: "#0078d7"
-  695081657207619584: "#e81224"
-  695082887946436645: "#16c60c"
-  695083006611816458: "#f7630c"
-  695083119740715119: "#886ce4"
-  695083251991052308: "#383838"
-
-vc-channels-nickcolors:
-  695008534299017286: "#0f7fd0"
-  695081657207619584: "#e01020"
-  695082887946436645: "#10c000"
-  695083006611816458: "#f06000"
-  695083119740715119: "#8060e0"
-  695083251991052308: "#303030"
-
-
-# Canales de voz
-donnas-office: "442679780886708224"
-gretchens-desk: "442679874109308928"
-
-# Textos
-voicechannel-join: "%USER% se ha unido al canal de voz `%VOICECHANNEL%`"
-voicechannel-leave: "%USER% ha salido del canal de voz `%VOICECHANNEL%`"
-voicechannel-move: "%USER% se ha movido del canal de voz `%OLDVOICECHANNEL%` a `%NEWVOICECHANNEL%`"
+  # Black Club
+  - "741333620358250608": "694999418008502387"

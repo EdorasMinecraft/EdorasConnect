@@ -16,6 +16,9 @@ discord:
   unlink-error: "Ha ocurrido un error al desvincular esta cuenta de Discord. Vuelve a intentarlo más tarde. Si el problema persiste, ponte el contacto con el staff."
   unlink-error-with-code: "Ha ocurrido un error al desvincular esta cuenta de Discord. Por favor, reporta este fallo con el código de error `{code}`."
   generic-error-with-code: "Ha ocurrido un error inesperado al procesar esta solicitud. Por favor, reporta este error al staff con el código de error `{code}`"
+  voicechannel-join: "{user}#{discriminator} se ha unido al canal de voz `{voicechannel}`"
+  voicechannel-leave: "{user}#{discriminator} ha salido del canal de voz `{voicechannel}`"
+  voicechannel-move: "{user}#{discriminator} se ha movido del canal de voz `{oldvoicechannel}` a `{newvoicechannel}`"
 
 # Minecraft
 minecraft:
@@ -23,13 +26,27 @@ minecraft:
   generic-error-with-code: "{prefix} &#00eabaHa ocurrido un error inesperado al procesar esta solicitud. Por favor, reporta este error al staff con el código de error {code}"
   command-constructor-not-found: "{prefix} &#00eabaNo se ha encontrado ningún comando disponible bajo los parámetros introducidos."
   console-not-allowed: "{prefix} &#00eabaSolo un jugador de Minecraft puede ejecutar este comando."
+  player-not-found: "{prefix} &#00eabaNo se ha encontrado ninguna cuenta de Minecraft con el nombre indicado."
+  mojang-servers-down: "{prefix} &#00eabaLos servidores de Mojang parecen no responder. A continuación, mostramos más información."
+  not-allowed: "{prefix} &#00eabaNo tienes permiso para ejecutar este comando."
+  tasks:
+    account-not-linked: "{name}#{discriminator} no tiene la cuenta vinculada correctamente. Quitando rol de vinculado..."
   link:
     link-verification: "{prefix} &#00eabaHaz click aquí para vincular esta cuenta de Minecraft con la cuenta de Discord {name}#{discriminator}. Si no puedes clicar este mensaje, introduce el comando /discord link {snowflake}"
     link-verification-hover: "{prefix} &#00eabaHaz click aquí para finalizar el proceso de vinculación con Discord"
     account-linked: "{prefix} &#00eabaSe ha vinculado correctamente la cuenta de Discord {name}#{discriminator} a la cuenta de Minecraft {player}"
     no-link-expected: "{prefix} &#00eabaLa cuenta de Discord indicada no tiene ninguna petición de vinculación pendiente."
     wrong-account: "{prefix} &#00eabaEsta cuenta de Discord está siendo vinculada a una cuenta de Minecraft distinta. ¿Te has equivocado de cuenta?"
+    check:
+      linked-accounts: "{prefix} &#00eabaEl usuario {player} tiene las siguientes cuentas de Discord vinculadas: {discords}"
+      no-linked-accounts: "{prefix} &#00eabaEl usuario {player} no tiene ninguna cuenta de Discord vinculada."
   unlink:
     ask-confirmation: "{prefix} &#00eaba¡Cuidado! Este comando desvincula todas las cuentas de Discord asociadas al usuario de Minecraft actual. Si es lo que de verdad estás intentando hacer, vuelve a ejecutar este comando."
     unlinked-successfully: "{prefix} &#00eabaSe han desvinculado todas las cuentas de Discord asociadas a tu usuario de Minecraft."
     no-linked-accounts-found: "{prefix} &#00eabaNo se ha encontrado ninguna cuenta de Discord vinculada a tu usuario de Minecraft."
+  discord:
+    voicechannel-join: "{prefix} &#00eaba{user} se ha unido al canal de voz" # {voicechannel}, {user}
+    voicechannel-leave: "{prefix} &#00eaba{user} ha salido del canal de voz" # {voicechannel}, {user}
+    user-message: "{prefix} &#00eaba{user}&f: {message}"
+    user-message-with-file: "{prefix} &#00eaba{user} ({file})&f: &f{message}"
+    no-message: "(Mensaje vacio)"
