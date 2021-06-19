@@ -1,0 +1,35 @@
+# Discord
+discord:
+  link-description: "Vincula esta cuenta de Discord a tu cuenta de Minecraft"
+  link-nick-option-description: "Usuario de Minecraft a vincular a esta cuenta de Discord"
+  link-successful: "¡Perfecto! Te hemos enviado un mensaje dentro del servidor de Minecraft para que puedas verificar tu cuenta. Revísalo rápido, ya que el código caducará en breve."
+  link-error: "Ha ocurrido un error al vincular tu cuenta de Discord. Vuelve a intentarlo más tarde. Si el problema persiste, ponte en contacto con el staff."
+  link-error-with-code: "Ha ocurrido un error al vincular esta cuenta de Discord. Por favor, reporta este fallo con el código de error {code}."
+  link-already-in-process: "Ya tienes una petición de vinculación pendiente. Espera hasta cinco minutos para poder pedir una nueva."
+  link-limit-reached: "¡Vaya! Esta cuenta de Minecraft se encuentra vinculada a demasiadas cuentas de Discord. Desvincula alguna cuenta ejecutando el comando `/desvincular` desde ella, o desvincula todas ejecutando ese mismo comando en Minecraft."
+  link-player-not-found: "No hemos encontrado a ningún usuario con ese nombre que se encuentre conectado en Edoras. ¿Lo has escrito bien?"
+  link-already-linked: "¡Vaya! Parece que la cuenta de Discord que estás utilizando ya se encuentra vinculada a una cuenta de Minecraft."
+  link-wrong-channel: "Vaya... Este comando solo puede ser ejecutado desde el canal `#{channel}`"
+  unlink-description: "Desvincula esta cuenta de Discord de una cuenta de Minecraft"
+  unlink-successful: "Has desvinculado correctamente esta cuenta de Discord."
+  unlink-player-not-found: "Esta cuenta de Discord no se encuentra vinculada a ningún usuario de Minecraft."
+  unlink-error: "Ha ocurrido un error al desvincular esta cuenta de Discord. Vuelve a intentarlo más tarde. Si el problema persiste, ponte el contacto con el staff."
+  unlink-error-with-code: "Ha ocurrido un error al desvincular esta cuenta de Discord. Por favor, reporta este fallo con el código de error `{code}`."
+  generic-error-with-code: "Ha ocurrido un error inesperado al procesar esta solicitud. Por favor, reporta este error al staff con el código de error `{code}`"
+
+# Minecraft
+minecraft:
+  prefix: "&f[&#2a7f71EdorasConnect&f]"
+  generic-error-with-code: "{prefix} &#00eabaHa ocurrido un error inesperado al procesar esta solicitud. Por favor, reporta este error al staff con el código de error {code}"
+  command-constructor-not-found: "{prefix} &#00eabaNo se ha encontrado ningún comando disponible bajo los parámetros introducidos."
+  console-not-allowed: "{prefix} &#00eabaSolo un jugador de Minecraft puede ejecutar este comando."
+  link:
+    link-verification: "{prefix} &#00eabaHaz click aquí para vincular esta cuenta de Minecraft con la cuenta de Discord {name}#{discriminator}. Si no puedes clicar este mensaje, introduce el comando /discord link {snowflake}"
+    link-verification-hover: "{prefix} &#00eabaHaz click aquí para finalizar el proceso de vinculación con Discord"
+    account-linked: "{prefix} &#00eabaSe ha vinculado correctamente la cuenta de Discord {name}#{discriminator} a la cuenta de Minecraft {player}"
+    no-link-expected: "{prefix} &#00eabaLa cuenta de Discord indicada no tiene ninguna petición de vinculación pendiente."
+    wrong-account: "{prefix} &#00eabaEsta cuenta de Discord está siendo vinculada a una cuenta de Minecraft distinta. ¿Te has equivocado de cuenta?"
+  unlink:
+    ask-confirmation: "{prefix} &#00eaba¡Cuidado! Este comando desvincula todas las cuentas de Discord asociadas al usuario de Minecraft actual. Si es lo que de verdad estás intentando hacer, vuelve a ejecutar este comando."
+    unlinked-successfully: "{prefix} &#00eabaSe han desvinculado todas las cuentas de Discord asociadas a tu usuario de Minecraft."
+    no-linked-accounts-found: "{prefix} &#00eabaNo se ha encontrado ninguna cuenta de Discord vinculada a tu usuario de Minecraft."

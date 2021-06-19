@@ -1,0 +1,4 @@
+name: EdorasConnect
+main: es.edoras.edorasconnect.EdorasConnect
+version: ${project.version}
+author: Kikisito
