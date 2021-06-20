@@ -39,15 +39,15 @@ public class DiscordCommands extends Command implements TabExecutor {
 
     @Override
     public void execute(CommandSender sender, String[] args) {
-        if(sender instanceof ProxiedPlayer){
+        if (sender instanceof ProxiedPlayer) {
             ProxiedPlayer player = (ProxiedPlayer) sender;
             String uuid = player.getUniqueId().toString();
-            switch(args.length){
+            switch (args.length) {
                 case 1:
-                    if(args[0].equalsIgnoreCase("unlink")){
+                    if (args[0].equalsIgnoreCase("unlink")) {
                         try {
-                            if(this.isDiscordLinked(uuid)){
-                                if(!DiscordStatics.pendingUnlinks.contains(uuid)) {
+                            if (this.isDiscordLinked(uuid)) {
+                                if (!DiscordStatics.pendingUnlinks.contains(uuid)) {
                                     // Añadir a la lista para confirmar desvinculación
                                     DiscordStatics.pendingUnlinks.add(uuid);
                                     // Eliminar tras un breve instante
@@ -71,13 +71,13 @@ public class DiscordCommands extends Command implements TabExecutor {
                     }
                     break;
                 case 2:
-                    if(args[0].equalsIgnoreCase("link")){
+                    if (args[0].equalsIgnoreCase("link")) {
                         // Obtener código de verificación introducido (Snowflake)
                         String snowflake = args[1];
                         // Verificar que el código introducido existe en el proceso de vinculación
-                        if(DiscordStatics.pendingLinks.containsKey(snowflake)){
+                        if (DiscordStatics.pendingLinks.containsKey(snowflake)) {
                             // Comprobar que el usuario de Minecraft asociado al proceso inicial coincide con el emisor del comando
-                            if(DiscordStatics.pendingLinks.get(snowflake).equals(uuid)){
+                            if (DiscordStatics.pendingLinks.get(snowflake).equals(uuid)) {
                                 // Vincular
                                 try {
                                     this.link(snowflake, uuid);
@@ -93,16 +93,16 @@ public class DiscordCommands extends Command implements TabExecutor {
                         } else {
                             player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_NO_LINK_EXPECTED.getMinecraftString()));
                         }
-                    } else if(args[0].equalsIgnoreCase("check") && sender.hasPermission("edorasconnect.link.check")) {
+                    } else if (args[0].equalsIgnoreCase("check") && sender.hasPermission("edorasconnect.link.check")) {
                         // Comprobar cuentas vinculadas a un usuario de Minecraft
                         try {
                             String playername = args[1];
                             // Obtener de la base de datos las cuentas vinculadas a un usuario de Minecraft
                             List<String> snowflakes = this.getLinkedDiscords(playername);
-                            if(!snowflakes.isEmpty()){
+                            if (!snowflakes.isEmpty()) {
                                 List<String> discords = new ArrayList<>();
                                 // Agrupar los datos de cada cuenta en una nueva lista
-                                for(int i = 0; i < snowflakes.size(); i++){
+                                for (int i = 0; i < snowflakes.size(); i++) {
                                     // Declarar i para usarla posteriormente
                                     int finalI = i;
                                     String snowflake = snowflakes.get(i);
@@ -114,7 +114,7 @@ public class DiscordCommands extends Command implements TabExecutor {
                                         // Añadir datos a la lista agrupadora
                                         discords.add(name + "#" + discriminator);
                                         // Detectar última cuenta vinculada
-                                        if(finalI == snowflakes.size() - 1){
+                                        if (finalI == snowflakes.size() - 1) {
                                             // Enviar mensaje al sender con las cuentas de Discord asociadas a la cuenta de Minecraft indicada
                                             player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_LINKED_ACCOUNTS.getMinecraftString().replace("{player}", playername).replace("{discords}", String.join(", ", discords))));
                                         }
@@ -128,7 +128,7 @@ public class DiscordCommands extends Command implements TabExecutor {
                             // Error al contactar con los servidores
                             player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_MOJANG_SERVERS_DOWN.getMinecraftString()));
                             // Comprobar si es Rate Limit e informar
-                            if(e.getMessage().contains("HTTP response code: 429")){
+                            if (e.getMessage().contains("HTTP response code: 429")) {
                                 player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_GENERIC_ERROR_WITH_CODE.getMinecraftString().replace("{code}", "429 Limit Reached")));
                                 minecraft.getLogger().severe("You have reached the request limit of the Mojang api! Please retry later!");
                             } else {
@@ -168,16 +168,16 @@ public class DiscordCommands extends Command implements TabExecutor {
         // Eliminar rol de todas las cuentas vinculadas
         PreparedStatement statement = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;");
         statement.setString(1, uuid);
-        if(statement.execute()){
+        if (statement.execute()) {
             ResultSet resultSet = statement.getResultSet();
-            while(resultSet.next()){
+            while (resultSet.next()) {
                 // Obtener snowflake de la base de datos
                 String snowflake = resultSet.getString("discord");
                 Guild guild = discord.getGuildById(ECConfig.DISCORD_GUILD.getString());
                 Role role = Objects.requireNonNull(guild, "Guild must not be null").getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString());
                 // Encontrar al usuario por Snowflake y eliminar rol
                 discord.retrieveUserById(snowflake).queue(user -> {
-                    if(guild.getMember(user) != null){
+                    if (guild.getMember(user) != null) {
                         guild.removeRoleFromMember(Objects.requireNonNull(guild.getMember(user), "Member must not be null"), Objects.requireNonNull(role, "Role must not be null")).queue();
                     }
                 });
@@ -206,7 +206,7 @@ public class DiscordCommands extends Command implements TabExecutor {
         getSnowflakeQuery.setString(1, playeruuid);
         getSnowflakeQuery.execute();
         ResultSet resultSet = getSnowflakeQuery.getResultSet();
-        while(resultSet.next()){
+        while (resultSet.next()) {
             snowflakes.add(resultSet.getString("discord"));
         }
         return snowflakes;
@@ -216,19 +216,20 @@ public class DiscordCommands extends Command implements TabExecutor {
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
         List<String> tabComplete = new ArrayList<>();
         if (args.length == 1) {
-            for(ProxiedPlayer player : minecraft.getProxy().getPlayers()){
-                if(player.getName().startsWith(args[0])){
-                    tabComplete.add(player.getName());
-                }
-            }
-            if("link".startsWith(args[0])){
+            if ("link".startsWith(args[0].toLowerCase())) {
                 tabComplete.add("link");
             }
-            if("unlink".startsWith(args[0])){
+            if ("unlink".startsWith(args[0].toLowerCase())) {
                 tabComplete.add("unlink");
             }
-            if("check".startsWith(args[0]) && sender.hasPermission("edorasconnect.link.check")){
+            if ("check".startsWith(args[0].toLowerCase()) && sender.hasPermission("edorasconnect.link.check")) {
                 tabComplete.add("check");
+            }
+        } else if (args[0].equalsIgnoreCase("check") && sender.hasPermission("edorasconnect.link.check") && args.length == 2) {
+            for (ProxiedPlayer player : minecraft.getProxy().getPlayers()) {
+                if (player.getName().toLowerCase().startsWith(args[1].toLowerCase())) {
+                    tabComplete.add(player.getName());
+                }
             }
         }
         return tabComplete;
