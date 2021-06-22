@@ -32,6 +32,8 @@ minecraft:
   tasks:
     account-not-linked: "{name}#{discriminator} no tiene la cuenta vinculada correctamente. Quitando rol de vinculado..."
   link:
+    link-successful-global-message: "{prefix} &#00eaba{player} ha vinculado su cuenta de Discord. ¿A qué esperas para hacer tú también? https://discord.edoras.es/"
+    link-successful-global-message-hover: "{prefix} &#00eabaHaz click aquí para acceder al Discord oficial del servidor"
     link-verification: "{prefix} &#00eabaHaz click aquí para vincular esta cuenta de Minecraft con la cuenta de Discord {name}#{discriminator}. Si no puedes clicar este mensaje, introduce el comando /discord link {snowflake}"
     link-verification-hover: "{prefix} &#00eabaHaz click aquí para finalizar el proceso de vinculación con Discord"
     account-linked: "{prefix} &#00eabaSe ha vinculado correctamente la cuenta de Discord {name}#{discriminator} a la cuenta de Minecraft {player}"

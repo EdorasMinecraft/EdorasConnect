@@ -14,11 +14,19 @@ link:
 
 # Servidor de Discord
 discord-guild: "442668326888669195"
+discord-guild-url: "https://discord.edoras.es/"
 member-role: "442669542465077249"
 
 # Canales de texto
 link-channel: "695992710699679794"
 log-channel: "708762845428449351"
+
+#/*
+staffchat-channel: "442679632928571394"
+adminchat-channel: "701226195466846258"
+logstaffchat-channel: "700410011834122260"
+logadminchat-channel: "700482664016379986"
+#*/
 
 linked-channels-map:
   # Text Channel: Voice Channel
