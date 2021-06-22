@@ -161,7 +161,7 @@ public class DiscordCommands extends Command implements TabExecutor {
         // Añadir rol al usuario
         Guild guild = discord.getGuildById(ECConfig.DISCORD_GUILD.getString());
         Role role = Objects.requireNonNull(guild, "Guild must not be null").getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString());
-        discord.retrieveUserById(snowflake).queue(user -> guild.addRoleToMember(Objects.requireNonNull(guild.getMember(user), "Member must not be null"), Objects.requireNonNull(role, "Role must not be null")).queue());
+        discord.retrieveUserById(snowflake).queue(user -> guild.retrieveMember(user).queue(member -> guild.addRoleToMember(member, Objects.requireNonNull(role, "Role must not be null")).queue()));
     }
 
     private void unlink(String uuid) throws SQLException {
@@ -176,11 +176,7 @@ public class DiscordCommands extends Command implements TabExecutor {
                 Guild guild = discord.getGuildById(ECConfig.DISCORD_GUILD.getString());
                 Role role = Objects.requireNonNull(guild, "Guild must not be null").getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString());
                 // Encontrar al usuario por Snowflake y eliminar rol
-                discord.retrieveUserById(snowflake).queue(user -> {
-                    if (guild.getMember(user) != null) {
-                        guild.removeRoleFromMember(Objects.requireNonNull(guild.getMember(user), "Member must not be null"), Objects.requireNonNull(role, "Role must not be null")).queue();
-                    }
-                });
+                discord.retrieveUserById(snowflake).queue(user -> guild.retrieveMember(user).queue(member -> guild.removeRoleFromMember(member, Objects.requireNonNull(role, "Role must not be null")).queue()));
             }
         }
 

@@ -4,6 +4,7 @@ import es.edoras.edorasconnect.ECConfig;
 import es.edoras.edorasconnect.ECMessages;
 import es.edoras.edorasconnect.EdorasConnect;
 import es.edoras.edorasconnect.Utils;
+import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
@@ -218,6 +219,11 @@ public class DiscordEvents extends ListenerAdapter {
         // Ignorar bots y sistema
         if(event.getAuthor().isBot() || event.getAuthor().isSystem()){
             return;
+        }
+
+        // Si es un mensaje en el canal de vinculación y el usuario no tiene permiso de MESSAGE_MANAGE, eliminar
+        if(event.getChannel().getId().equals(ECConfig.DISCORD_LINK_CHANNEL.getString()) && event.getMember().hasPermission(Permission.MESSAGE_MANAGE)){
+            event.getMessage().delete().queue();
         }
 
         // Si el canal está definido en la configuración, enviar mensaje del usuario por Minecraft
