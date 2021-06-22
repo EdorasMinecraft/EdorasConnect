@@ -12,7 +12,6 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.events.message.guild.GenericGuildMessageEvent;
 import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
@@ -294,6 +293,11 @@ public class DiscordEvents extends ListenerAdapter {
         // MEMBER DE MEMBERLIST -> TODOS LOS USUARIOS DEL CANAL
         // USER -> USER QUE ENTRA O SALE
         for(Member member : memberList){
+            // Si es un bot o el sistema, ignorar y saltar
+            if(member.getUser().isBot() || member.getUser().isSystem()){
+                continue;
+            }
+
             try {
                 // Obtener Snowflake del usuario a enviar el mensaje
                 String snowflake = member.getUser().getId();
@@ -311,7 +315,7 @@ public class DiscordEvents extends ListenerAdapter {
                 ProxiedPlayer player;
                 // Si el jugador está conectado, enviar mensaje
                 // Soporta UUID y XUID
-                if ((player = plugin.getProxy().getPlayer(UUID.fromString(playeruuid))) != null) {
+                if (playeruuid != null && (player = plugin.getProxy().getPlayer(UUID.fromString(playeruuid))) != null) {
                     player.sendMessage(TextComponent.fromLegacyText(message.replace("{voicechannel}", voiceChannel.getName()).replace("{user}", playername)));
                 }
             } catch (Exception e) {
