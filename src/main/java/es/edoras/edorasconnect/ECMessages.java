@@ -32,7 +32,7 @@ public enum ECMessages {
     MINECRAFT_PREFIX("minecraft.prefix", "EdorasConnect: "),
     MINECRAFT_GENERIC_ERROR_WITH_CODE("minecraft.generic-error-with-code", "Ha ocurrido un error inesperado al procesar esta solicitud. Por favor, reporta este error al staff con el código de error {code}"),
     MINECRAFT_COMMAND_CONSTRUCTOR_NOT_FOUND("minecraft.command-constructor-not-found", "No se ha encontrado ningún comando disponible bajo los parámetros introducidos."),
-    MINECRAFT_NO_LINKED_ACCOUTS_FOUND("minecraft.link.no-linked-accounts-found", "No se ha encontrado ninguna cuenta de Discord vinculada a tu usuario de Minecraft."),
+    MINECRAFT_NO_LINKED_ACCOUTS_FOUND("minecraft.unlink.no-linked-accounts-found", "No se ha encontrado ninguna cuenta de Discord vinculada a tu usuario de Minecraft."),
     MINECRAFT_LINK_VERIFICATION("minecraft.link.link-verification", "Haz click aquí para vincular esta cuenta de Minecraft con la cuenta de Discord {name}#{discriminator}. Si no puedes clicar este mensaje, introduce el comando /discord link {snowflake}"),
     MINECRAFT_LINK_VERIFICATION_HOVER("minecraft.link.link-verification-hover", "Haz click aquí para finalizar el proceso de vinculación con Discord"),
     MINECRAFT_UNLINK_ASK_CONFIRMATION("minecraft.unlink.ask-confirmation", "Estás a punto de desvincular todas las cuentas de Discord asociadas a esta cuenta. Si deseas desvincular una en concreto, puedes hacerlo desde ella a través del canal #vincular de nuestro servidor de Discord. Si estás seguro de que quieres desvincular todas tus cuentas, vuelve a ejecutar este comando."),
@@ -50,7 +50,9 @@ public enum ECMessages {
     MINECRAFT_VOICECHANNEL_LEAVE("minecraft.discord.voicechannel-leave", "{prefix} &#00eaba{user}#{discriminator} ha salido del canal de voz {voicechannel}"),
     MINECRAFT_DISCORD_USER_MESSAGE("minecraft.discord.user-message", "{prefix} &#00eaba{user}&f: {message}"),
     MINECRAFT_DISCORD_USER_MESSAGE_WITH_FILE("minecraft.discord.user-message-with-file", "{prefix} &#00eaba{user}&f ha adjuntado el archivo {file}. &f{message}"),
-    MINECRAFT_DISCORD_NO_MESSAGE("minecraft.discord.no-message", "(Mensaje vacio)")
+    MINECRAFT_DISCORD_NO_MESSAGE("minecraft.discord.no-message", "(Mensaje vacio)"),
+    MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE("minecraft.discord.link-successful-global-message", "{prefix} &#00eaba{player} ha vinculado su cuenta de Discord. ¿A qué esperas para hacer tú también? https://discord.edoras.es/"),
+    MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE_HOVER("minecraft.discord.link-successful-global-message-hover", "{prefix} &#00eabaHaz click aquí para acceder al Discord oficial del servidor")
     ;
 
     private static Configuration config;

@@ -9,7 +9,10 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Role;
 import net.md_5.bungee.api.CommandSender;
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
+import net.md_5.bungee.api.chat.hover.content.Text;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
@@ -83,6 +86,16 @@ public class DiscordCommands extends Command implements TabExecutor {
                                     this.link(snowflake, uuid);
                                     DiscordStatics.pendingLinks.remove(snowflake);
                                     discord.retrieveUserById(snowflake).queue(user -> player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_ACCOUNT_LINKED.getMinecraftString().replace("{player}", player.getName()).replace("{discriminator}", user.getDiscriminator()).replace("{name}", user.getName()))));
+
+                                    // Mensaje global de vinculación exitosa
+                                    for(ProxiedPlayer p : minecraft.getProxy().getPlayers()){
+                                        if(player.getUniqueId() != p.getUniqueId()) {
+                                            TextComponent linkSuccessful = new TextComponent(TextComponent.fromLegacyText(ECMessages.MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE.getMinecraftString().replace("{player}", player.getName())));
+                                            linkSuccessful.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(TextComponent.fromLegacyText(ECMessages.MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE_HOVER.getMinecraftString()))));
+                                            linkSuccessful.setClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, ECConfig.DISCORD_GUILD_URL.getString()));
+                                            p.sendMessage(linkSuccessful);
+                                        }
+                                    }
                                 } catch (SQLException e) {
                                     player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_GENERIC_ERROR_WITH_CODE.getMinecraftString().replace("{code}", "Database connection error")));
                                     e.printStackTrace();

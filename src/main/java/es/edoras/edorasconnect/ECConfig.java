@@ -19,6 +19,8 @@ public enum ECConfig {
 
     XAPI_TOKEN("xapi-token", ""),
 
+    DISCORD_GUILD_URL("discord-guild-url", "https://discord.edoras.es/"),
+
     // DISCORD
     DISCORD_TOKEN("bot-token", ""),
     DISCORD_GUILD("discord-guild", "442668326888669195"),
