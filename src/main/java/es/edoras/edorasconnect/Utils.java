@@ -5,6 +5,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -98,8 +99,16 @@ public class Utils {
         return json.get(json.size() - 1).getAsJsonObject().get("name").getAsString();
     }
 
-    private static String requestGamertag(String xuid) throws Exception {
-        throw new Exception("Not yet");
+    private static String requestGamertag(String rawxuid) throws Exception {
+        String hex = rawxuid.substring(19).replace("-", "");
+        BigInteger xuid = new BigInteger(hex, 16);
+        // Obtención de Gamertag
+        URL gamertagapi = new URL("https://xapi.us/v2/gamertag/" + xuid);
+        HttpURLConnection httpURLConnection = (HttpURLConnection) gamertagapi.openConnection();
+        httpURLConnection.setRequestProperty("X-AUTH", ECConfig.XAPI_TOKEN.getString());
+        Scanner scanner = new Scanner(httpURLConnection.getInputStream());
+        String gamertag = scanner.next();
+        return gamertag;
     }
 
     private static String requestUUID(String name) throws Exception {

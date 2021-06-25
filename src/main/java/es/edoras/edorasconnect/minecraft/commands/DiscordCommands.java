@@ -86,7 +86,6 @@ public class DiscordCommands extends Command implements TabExecutor {
                                     this.link(snowflake, uuid);
                                     DiscordStatics.pendingLinks.remove(snowflake);
                                     discord.retrieveUserById(snowflake).queue(user -> player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_ACCOUNT_LINKED.getMinecraftString().replace("{player}", player.getName()).replace("{discriminator}", user.getDiscriminator()).replace("{name}", user.getName()))));
-
                                     // Mensaje global de vinculación exitosa
                                     for(ProxiedPlayer p : minecraft.getProxy().getPlayers()){
                                         if(player.getUniqueId() != p.getUniqueId()) {
