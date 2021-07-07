@@ -41,7 +41,7 @@ public final class EdorasConnect extends Plugin {
 
             // Iniciar bot de Discord
             // GatewayIntent para acceder a información más sensible
-            discord = JDABuilder.createDefault(ECConfig.DISCORD_TOKEN.getString(),
+            this.discord = JDABuilder.createDefault(ECConfig.DISCORD_TOKEN.getString(),
                     GatewayIntent.GUILD_MEMBERS,
                     GatewayIntent.GUILD_VOICE_STATES,
                     GatewayIntent.GUILD_EMOJIS,
@@ -54,9 +54,9 @@ public final class EdorasConnect extends Plugin {
         }
 
         // Iniciar bot de Telegram
-        // empty
 
         // Minecraft
+        // Registrar comandos
         this.getProxy().getPluginManager().registerCommand(this, new DiscordCommands(this, discord, mysql));
     }
 
@@ -98,7 +98,7 @@ public final class EdorasConnect extends Plugin {
     }
 
     public void checkMembersWithLinkedRole(){
-        Guild guild = discord.getGuildById(ECConfig.DISCORD_GUILD.getString());
+        Guild guild = Objects.requireNonNull(discord.getGuildById(ECConfig.DISCORD_GUILD.getString()), "Guild must not be null");
         // Comprobar que todos los Socios están vinculados
         Role linkedRole = Objects.requireNonNull(guild.getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString()), "Role must not be null");
         List<String> linkedAccounts = new ArrayList<>();

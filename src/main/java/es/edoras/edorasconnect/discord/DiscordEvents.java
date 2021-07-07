@@ -221,7 +221,7 @@ public class DiscordEvents extends ListenerAdapter {
         }
 
         // Si es un mensaje en el canal de vinculación y el usuario no tiene permiso de MESSAGE_MANAGE, eliminar
-        if(event.getChannel().getId().equals(ECConfig.DISCORD_LINK_CHANNEL.getString()) && event.getMember().hasPermission(Permission.MESSAGE_MANAGE)){
+        if(event.getChannel().getId().equals(ECConfig.DISCORD_LINK_CHANNEL.getString()) && !event.getMember().hasPermission(Permission.MESSAGE_MANAGE)){
             event.getMessage().delete().queue();
         }
 

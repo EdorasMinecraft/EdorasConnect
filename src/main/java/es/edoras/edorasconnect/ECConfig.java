@@ -21,8 +21,11 @@ public enum ECConfig {
 
     DISCORD_GUILD_URL("discord-guild-url", "https://discord.edoras.es/"),
 
+    // TELEGRAM
+    TELEGRAM_TOKEN("telegram-token", ""),
+
     // DISCORD
-    DISCORD_TOKEN("bot-token", ""),
+    DISCORD_TOKEN("discord-token", ""),
     DISCORD_GUILD("discord-guild", "442668326888669195"),
     DISCORD_MEMBER_ROLE("member-role", "442668326888669195"),
     DISCORD_MAX_ACCOUNTS_LINKED("link.max-accounts-linked", 3),

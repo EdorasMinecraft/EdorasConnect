@@ -107,8 +107,8 @@ public class Utils {
         HttpURLConnection httpURLConnection = (HttpURLConnection) gamertagapi.openConnection();
         httpURLConnection.setRequestProperty("X-AUTH", ECConfig.XAPI_TOKEN.getString());
         Scanner scanner = new Scanner(httpURLConnection.getInputStream());
-        String gamertag = scanner.next();
-        return gamertag;
+        // scanner.next() devuelve String gamertag
+        return scanner.next();
     }
 
     private static String requestUUID(String name) throws Exception {
