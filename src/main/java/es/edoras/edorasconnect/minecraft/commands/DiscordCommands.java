@@ -170,6 +170,8 @@ public class DiscordCommands extends Command implements TabExecutor {
         statement.setString(1, snowflake);
         statement.setString(2, uuid);
         statement.executeUpdate();
+        // Closing database resources
+        statement.close();
         // Añadir rol al usuario
         Guild guild = discord.getGuildById(ECConfig.DISCORD_GUILD.getString());
         Role role = Objects.requireNonNull(guild, "Guild must not be null").getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString());
@@ -190,12 +192,18 @@ public class DiscordCommands extends Command implements TabExecutor {
                 // Encontrar al usuario por Snowflake y eliminar rol
                 discord.retrieveUserById(snowflake).queue(user -> guild.retrieveMember(user).queue(member -> guild.removeRoleFromMember(member, Objects.requireNonNull(role, "Role must not be null")).queue()));
             }
+            // Closing database resources
+            resultSet.close();
         }
+        // Closing database resources
+        statement.close();
 
         // Eliminar registros
         PreparedStatement deleteStatement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE minecraft = ?;");
         deleteStatement.setString(1, uuid);
         deleteStatement.executeUpdate();
+        // Closing database resources
+        deleteStatement.close();
     }
 
     private boolean isDiscordLinked(@NotNull String uuid) throws SQLException {
@@ -203,7 +211,9 @@ public class DiscordCommands extends Command implements TabExecutor {
         statement.setString(1, uuid);
         statement.execute();
         ResultSet result = statement.getResultSet();
-        return result.first();
+        boolean linked = result.first();
+        statement.close();
+        return linked;
     }
 
     private List<String> getLinkedDiscords(@NotNull String playername) throws Exception {
@@ -217,6 +227,9 @@ public class DiscordCommands extends Command implements TabExecutor {
         while (resultSet.next()) {
             snowflakes.add(resultSet.getString("discord"));
         }
+        // Closing database resources
+        resultSet.close();
+        getSnowflakeQuery.close();
         return snowflakes;
     }
 

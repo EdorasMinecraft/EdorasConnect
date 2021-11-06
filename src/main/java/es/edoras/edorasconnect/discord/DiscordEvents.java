@@ -329,7 +329,11 @@ public class DiscordEvents extends ListenerAdapter {
         preparedStatement.setString(1, snowflake);
         ResultSet resultSet = preparedStatement.executeQuery();
         if(resultSet.first()){
-            return resultSet.getString("minecraft");
+            String uuid = resultSet.getString("minecraft");
+            // Closing database resources
+            preparedStatement.close();
+            resultSet.close();
+            return uuid;
         } else {
             return null;
         }
@@ -344,7 +348,11 @@ public class DiscordEvents extends ListenerAdapter {
         statement.setString(1, snowflake);
         statement.execute();
         ResultSet result = statement.getResultSet();
-        return result.first();
+        boolean linked = result.first();
+        // Closing database resources and return if the account is linked
+        statement.close();
+        result.close();
+        return linked;
     }
 
     private boolean hasReachedLimit(String uuid) throws SQLException {
@@ -353,7 +361,11 @@ public class DiscordEvents extends ListenerAdapter {
         statement.execute();
         ResultSet result = statement.getResultSet();
         result.last();
-        return result.getRow() >= ECConfig.DISCORD_MAX_ACCOUNTS_LINKED.getInteger();
+        boolean limitReached = result.getRow() >= ECConfig.DISCORD_MAX_ACCOUNTS_LINKED.getInteger();
+        // Closing database resources
+        statement.close();
+        result.close();
+        return limitReached;
     }
 
     private boolean requestLink(ProxiedPlayer player, User user){
@@ -376,6 +388,7 @@ public class DiscordEvents extends ListenerAdapter {
             statement.setString(1, member.getId());
             statement.executeUpdate();
             guild.removeRoleFromMember(member, Objects.requireNonNull(guild.getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString()), "Role could not be found (null)")).queue();
+            statement.close();
             return true;
         } catch (SQLException | NullPointerException e) {
             e.printStackTrace();
