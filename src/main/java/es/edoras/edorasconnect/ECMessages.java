@@ -51,8 +51,8 @@ public enum ECMessages {
     MINECRAFT_DISCORD_USER_MESSAGE("minecraft.discord.user-message", "{prefix} &#00eaba{user}&f: {message}"),
     MINECRAFT_DISCORD_USER_MESSAGE_WITH_FILE("minecraft.discord.user-message-with-file", "{prefix} &#00eaba{user}&f ha adjuntado el archivo {file}. &f{message}"),
     MINECRAFT_DISCORD_NO_MESSAGE("minecraft.discord.no-message", "(Mensaje vacio)"),
-    MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE("minecraft.discord.link-successful-global-message", "{prefix} &#00eaba{player} ha vinculado su cuenta de Discord. ¿A qué esperas para hacer tú también? https://discord.edoras.es/"),
-    MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE_HOVER("minecraft.discord.link-successful-global-message-hover", "{prefix} &#00eabaHaz click aquí para acceder al Discord oficial del servidor")
+    MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE("minecraft.link.link-successful-global-message", "{prefix} &#00eaba{player} ha vinculado su cuenta de Discord. ¿A qué esperas para hacer tú también? https://discord.edoras.es/"),
+    MINECRAFT_LINK_SUCCESSFUL_GLOBAL_MESSAGE_HOVER("minecraft.link.link-successful-global-message-hover", "{prefix} &#00eabaHaz click aquí para acceder al Discord oficial del servidor")
     ;
 
     private static Configuration config;
