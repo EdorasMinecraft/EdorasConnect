@@ -126,6 +126,7 @@ public final class EdorasConnect extends Plugin {
 
         // Eliminar Socio a los no vinculados y añadirlo a los vinculados
         for(Member member : guild.getMembers()){
+            if(member.getUser().getId().equals(discord.getSelfUser().getId())) { continue; } // Skip self bot
             if(!linkedAccounts.contains(member.getUser().getId())){
                 this.getProxy().getLogger().info(ECMessages.MINECRAFT_TASKS_ACCOUNT_NOT_LINKED.getString().replace("{discriminator}", member.getUser().getDiscriminator()).replace("{name}", member.getUser().getName()));
                 guild.removeRoleFromMember(member, linkedRole).queue();
