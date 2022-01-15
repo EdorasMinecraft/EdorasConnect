@@ -31,6 +31,7 @@ minecraft:
   not-allowed: "{prefix} &#00eabaNo tienes permiso para ejecutar este comando."
   tasks:
     account-not-linked: "{name}#{discriminator} no tiene la cuenta vinculada correctamente. Quitando rol de vinculado..."
+    account-linked: "{name}#{discriminator} tiene la cuenta vinculada pero no consta en el servidor. Añadiendo rol..."
   link:
     link-successful-global-message: "{prefix} &#00eaba{player} ha vinculado su cuenta de Discord. ¿A qué esperas para hacer tú también? https://discord.edoras.es/"
     link-successful-global-message-hover: "{prefix} &#00eabaHaz click aquí para acceder al Discord oficial del servidor"

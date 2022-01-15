@@ -42,6 +42,7 @@ public enum ECMessages {
     MINECRAFT_NO_LINK_EXPECTED("minecraft.link.no-link-expected", "La cuenta de Discord indicada no tiene ninguna petición de vinculación pendiente."),
     MINECRAFT_CONSOLE_NOT_ALLOWED("minecraft.console-not-allowed", "Solo un jugador de Minecraft puede ejecutar este comando."),
     MINECRAFT_TASKS_ACCOUNT_NOT_LINKED("minecraft.tasks.account-not-linked", "{name}#{discriminator} no tiene la cuenta vinculada correctamente. Quitando rol de vinculado..."),
+    MINECRAFT_TASKS_ACCOUNT_LINKED("minecraft.tasks.account-linked", "{name}#{discriminator} tiene la cuenta vinculada pero no consta en el servidor. Añadiendo rol..."),
     MINECRAFT_LINKED_ACCOUNTS("minecraft.link.check.linked-accounts", "El usuario {player} tiene las siguientes cuentas de Discord vinculadas: {discords}"),
     MINECRAFT_NO_LINKED_ACCOUNTS("minecraft.link.check.no-linked-accounts", "{prefix} &#00eabaEl usuario {player} no tiene ninguna cuenta de Discord vinculada."),
     MINECRAFT_PLAYER_NOT_FOUND("minecraft.player-not-found", "{prefix} &#00eabaNo se ha encontrado ninguna cuenta de Minecraft con el nombre indicado."),
