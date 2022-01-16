@@ -325,7 +325,7 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     private String getMinecraftUUIDfromDatabase(String snowflake) throws SQLException {
-        PreparedStatement preparedStatement = mysql.prepareStatement("SELECT minecraft FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_INSENSITIVE);
+        PreparedStatement preparedStatement = mysql.prepareStatement("SELECT minecraft FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         preparedStatement.setString(1, snowflake);
         ResultSet resultSet = preparedStatement.executeQuery();
         if(resultSet.first()){
@@ -344,7 +344,7 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     private boolean isDiscordLinked(String snowflake) throws SQLException {
-        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_INSENSITIVE);
+        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, snowflake);
         statement.execute();
         ResultSet result = statement.getResultSet();
@@ -356,7 +356,7 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     private boolean hasReachedLimit(String uuid) throws SQLException {
-        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_INSENSITIVE);
+        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, uuid);
         statement.execute();
         ResultSet result = statement.getResultSet();
@@ -384,7 +384,7 @@ public class DiscordEvents extends ListenerAdapter {
 
     private boolean unlink(Guild guild, Member member){
         try {
-            PreparedStatement statement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_INSENSITIVE);
+            PreparedStatement statement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
             statement.setString(1, member.getId());
             statement.executeUpdate();
             guild.removeRoleFromMember(member, Objects.requireNonNull(guild.getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString()), "Role could not be found (null)")).queue();
