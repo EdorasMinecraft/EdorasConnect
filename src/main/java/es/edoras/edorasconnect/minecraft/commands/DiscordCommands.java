@@ -166,7 +166,7 @@ public class DiscordCommands extends Command implements TabExecutor {
 
     private void link(String snowflake, String uuid) throws SQLException {
         // Añadir registro a la base de datos
-        PreparedStatement statement = mysql.prepareStatement("INSERT INTO edorasconnect_discord (discord, minecraft) VALUES (?, ?);");
+        PreparedStatement statement = mysql.prepareStatement("INSERT INTO edorasconnect_discord (discord, minecraft) VALUES (?, ?);", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, snowflake);
         statement.setString(2, uuid);
         statement.executeUpdate();
@@ -180,7 +180,7 @@ public class DiscordCommands extends Command implements TabExecutor {
 
     private void unlink(String uuid) throws SQLException {
         // Eliminar rol de todas las cuentas vinculadas
-        PreparedStatement statement = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;");
+        PreparedStatement statement = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, uuid);
         if (statement.execute()) {
             ResultSet resultSet = statement.getResultSet();
@@ -199,7 +199,7 @@ public class DiscordCommands extends Command implements TabExecutor {
         statement.close();
 
         // Eliminar registros
-        PreparedStatement deleteStatement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE minecraft = ?;");
+        PreparedStatement deleteStatement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         deleteStatement.setString(1, uuid);
         deleteStatement.executeUpdate();
         // Closing database resources
@@ -207,7 +207,7 @@ public class DiscordCommands extends Command implements TabExecutor {
     }
 
     private boolean isDiscordLinked(@NotNull String uuid) throws SQLException {
-        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;");
+        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, uuid);
         statement.execute();
         ResultSet result = statement.getResultSet();
@@ -220,7 +220,7 @@ public class DiscordCommands extends Command implements TabExecutor {
         List<String> snowflakes = new ArrayList<>();
         String playeruuid = Utils.getUniqueId(playername);
         // Consultar Snowflake en la base de datos con la ID obtenida
-        PreparedStatement getSnowflakeQuery = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;");
+        PreparedStatement getSnowflakeQuery = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         getSnowflakeQuery.setString(1, playeruuid);
         getSnowflakeQuery.execute();
         ResultSet resultSet = getSnowflakeQuery.getResultSet();
