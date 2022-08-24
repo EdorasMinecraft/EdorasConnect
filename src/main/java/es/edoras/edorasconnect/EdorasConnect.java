@@ -44,7 +44,6 @@ public final class EdorasConnect extends Plugin {
             this.discord = JDABuilder.createDefault(ECConfig.DISCORD_TOKEN.getString(),
                     GatewayIntent.GUILD_MEMBERS,
                     GatewayIntent.GUILD_VOICE_STATES,
-                    GatewayIntent.GUILD_EMOJIS,
                     GatewayIntent.GUILD_MESSAGES)
                     .addEventListeners(new DiscordEvents(this, mysql))
                     .setActivity(Activity.watching("Edoras"))

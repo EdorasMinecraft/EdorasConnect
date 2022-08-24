@@ -19,6 +19,7 @@ discord:
   voicechannel-join: "{user}#{discriminator} se ha unido al canal de voz `{voicechannel}`"
   voicechannel-leave: "{user}#{discriminator} ha salido del canal de voz `{voicechannel}`"
   voicechannel-move: "{user}#{discriminator} se ha movido del canal de voz `{oldvoicechannel}` a `{newvoicechannel}`"
+  guild-not-found: "La guild no ha sido encontrada. ¿Es la ID de la configuración correcta?"
 
 # Minecraft
 minecraft:

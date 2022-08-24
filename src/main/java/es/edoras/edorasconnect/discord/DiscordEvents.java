@@ -6,18 +6,19 @@ import es.edoras.edorasconnect.EdorasConnect;
 import es.edoras.edorasconnect.Utils;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.components.Button;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -52,10 +53,19 @@ public class DiscordEvents extends ListenerAdapter {
         // Limpiar y registrar comandos de la guild de Edoras
         // Vinculación
         Guild guild = event.getJDA().getGuildById(ECConfig.DISCORD_GUILD.getString());
+
+        // Si por algún motivo no se encuentra la guild, abandonamos el proceso y avisamos.
+        if(guild == null) {
+            plugin.getLogger().severe(ECMessages.DISCORD_GUILD_NOT_FOUND.getString());
+            return;
+        }
+
         guild.updateCommands().queue();
+
         guild.updateCommands().addCommands(
-                new CommandData("vincular", ECMessages.DISCORD_LINK_DESCRIPTION.getString()).addOption(OptionType.STRING, "nick", ECMessages.DISCORD_LINK_NICK_OPTION_DESCRIPTION.getString(), true),
-                new CommandData("desvincular", ECMessages.DISCORD_UNLINK_DESCRIPTION.getString())
+                Commands.slash("vincular", ECMessages.DISCORD_LINK_DESCRIPTION.getString())
+                        .addOption(OptionType.STRING, "nick", ECMessages.DISCORD_LINK_NICK_OPTION_DESCRIPTION.getString(), true),
+                Commands.slash("desvincular", ECMessages.DISCORD_UNLINK_DESCRIPTION.getString())
         ).queue();
 
         // Comprobar que todos los Socios están vinculados
@@ -63,7 +73,7 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         if(event.getGuild() == null){
             return;
         }
@@ -74,7 +84,7 @@ public class DiscordEvents extends ListenerAdapter {
         switch(event.getName()){
             case "vincular":
                 // Comprobar que el proceso se hace en el canal correcto
-                if(this.correctChannel(event.getTextChannel())){
+                if(this.correctChannel(event.getChannel())){
                     // Try por posibles fallos en la base de datos
                     try {
                         // Comprobar que la cuenta no está vinculada
@@ -117,7 +127,7 @@ public class DiscordEvents extends ListenerAdapter {
                 break;
             case "desvincular":
                 // Comprobar que el proceso se hace en el canal correcto
-                if(this.correctChannel(event.getTextChannel())) {
+                if(this.correctChannel(event.getChannel())) {
                     // Try por posibles fallos en la base de datos
                     try {
                         // Comprobar que la cuenta está vinculada
@@ -214,7 +224,7 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event){
+    public void onMessageReceived(@NotNull MessageReceivedEvent event){
         // Ignorar bots y sistema
         if(event.getAuthor().isBot() || event.getAuthor().isSystem()){
             return;
@@ -269,12 +279,12 @@ public class DiscordEvents extends ListenerAdapter {
         }
     }
 
-    private void sendPublicLogMessage(VoiceChannel voiceChannel, Guild guild, User useraction, String message){
+    private void sendPublicLogMessage(AudioChannel audioChannel, Guild guild, User useraction, String message){
         // Obtener canal de texto asociado al canal de voz
         String textChannelID = null;
         Map<String, String> map = ECConfig.DISCORD_LINKED_CHANNELS_MAP.getMap();
         for(String o : map.keySet()){
-            if(map.get(o).equals(voiceChannel.getId())){
+            if(map.get(o).equals(audioChannel.getId())){
                 textChannelID = o;
             }
         }
@@ -282,13 +292,13 @@ public class DiscordEvents extends ListenerAdapter {
         if(textChannelID != null) {
             TextChannel textChannel = guild.getTextChannelById(textChannelID);
             if (textChannel != null) {
-                textChannel.sendMessage(message.replace("{voicechannel}", voiceChannel.getName()).replace("{user}", useraction.getName()).replace("{discriminator}", useraction.getDiscriminator())).queue();
+                textChannel.sendMessage(message.replace("{voicechannel}", audioChannel.getName()).replace("{user}", useraction.getName()).replace("{discriminator}", useraction.getDiscriminator())).queue();
             }
         }
     }
 
     // Enviar mensajes a los miembros del canal de que un usuario se ha unido/ido
-    private void sendMessage(List<Member> memberList, VoiceChannel voiceChannel, User user, String message){
+    private void sendMessage(List<Member> memberList, AudioChannel audioChannel, User user, String message){
         // Enviar mensaje a los usuarios del canal de voz conectados a Minecraft
         // MEMBER DE MEMBERLIST -> TODOS LOS USUARIOS DEL CANAL
         // USER -> USER QUE ENTRA O SALE
@@ -316,7 +326,7 @@ public class DiscordEvents extends ListenerAdapter {
                 // Si el jugador está conectado, enviar mensaje
                 // Soporta UUID y XUID
                 if (playeruuid != null && (player = plugin.getProxy().getPlayer(UUID.fromString(playeruuid))) != null) {
-                    player.sendMessage(TextComponent.fromLegacyText(message.replace("{voicechannel}", voiceChannel.getName()).replace("{user}", playername)));
+                    player.sendMessage(TextComponent.fromLegacyText(message.replace("{voicechannel}", audioChannel.getName()).replace("{user}", playername)));
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -339,8 +349,8 @@ public class DiscordEvents extends ListenerAdapter {
         }
     }
 
-    private boolean correctChannel(TextChannel textChannel){
-        return textChannel.getId().equals(ECConfig.DISCORD_LINK_CHANNEL.getString());
+    private boolean correctChannel(MessageChannelUnion channel){
+        return channel.getId().equals(ECConfig.DISCORD_LINK_CHANNEL.getString());
     }
 
     private boolean isDiscordLinked(String snowflake) throws SQLException {

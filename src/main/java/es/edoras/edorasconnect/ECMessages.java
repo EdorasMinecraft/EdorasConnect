@@ -17,7 +17,7 @@ public enum ECMessages {
     DISCORD_LINK_LIMIT_REACHED("discord.link-limit-reached", "¡Vaya! Esta cuenta de Minecraft se encuentra vinculada a demasiadas cuentas de Discord. Desvincula alguna cuenta ejecutando el comando `/desvincular` desde ella, o desvincula todas ejecutando ese mismo comando en Minecraft."),
     DISCORD_LINK_PLAYER_NOT_FOUND("discord.link-player-not-found", "No hemos encontrado a ningún usuario con ese nombre que se encuentre conectado en Edoras. ¿Lo has escrito bien?"),
     DISCORD_LINK_ALREADY_LINKED("discord.link-already-linked", "¡Vaya! Parece que la cuenta de Discord que estás utilizando ya se encuentra vinculada a una cuenta de Minecraft."),
-    DISCORD_LINK_WRONG_CHANNEL("discord.link-wrong-channel", ""),
+    DISCORD_LINK_WRONG_CHANNEL("discord.link-wrong-channel", "Vaya... Este comando solo puede ser ejecutado desde el canal `#{channel}`"),
     DISCORD_UNLINK_DESCRIPTION("discord.unlink-description", "Desvincula esta cuenta de Discord de una cuenta de Minecraft"),
     DISCORD_UNLINK_SUCCESSFUL("discord.unlink-successful", "Has desvinculado correctamente esta cuenta de Discord."),
     DISCORD_UNLINK_PLAYER_NOT_FOUND("discord.unlink-player-not-found", "Esta cuenta de Discord no se encuentra vinculada a ningún usuario de Minecraft."),
@@ -27,6 +27,7 @@ public enum ECMessages {
     DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL("discord.voicechannel-join", "{user}#{discriminator} se ha unido al canal de voz `{voicechannel}`"),
     DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL("discord.voicechannel-leave", "{user}#{discriminator} ha salido del canal de voz `{voicechannel}`"),
     DISCORD_LOG_MEMBER_MOVED_VOICE_CHANNEL("discord.voicechannel-move", "{user}#{discriminator} se ha movido del canal de voz `{oldvoicechannel}` a `{newvoicechannel}`"),
+    DISCORD_GUILD_NOT_FOUND("discord.guild-not-found", "La guild no ha sido encontrada. ¿Es la ID de la configuración correcta?"),
 
     // DISCORD
     MINECRAFT_PREFIX("minecraft.prefix", "EdorasConnect: "),
