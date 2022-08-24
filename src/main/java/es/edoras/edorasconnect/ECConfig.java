@@ -32,8 +32,9 @@ public enum ECConfig {
     LINK_EXPIRATION("link.link-expiration", 300),
     UNLINK_EXPIRATION("link.unlink-expiration", 120),
     DISCORD_LINK_CHANNEL("link-channel", "695992710699679794"),
-    DISCORD_LINKED_CHANNELS_MAP("linked-channels-map", new ArrayList<>()),
-    DISCORD_LOG_CHANNEL("log-channel", "708762845428449351")
+    DISCORD_LOG_CHANNEL("log-channel", "708762845428449351"),
+
+    DISCORD_EXCLUDED_CHANNELS_FROM_PURGE("channels-excluded-from-purge", new ArrayList<>())
     ;
 
     private static Configuration config;
@@ -67,16 +68,15 @@ public enum ECConfig {
         return config.getInt((String) this.path, (int) this.def);
     }
 
-    public Map<String, String> getMap(){
-        Map<String, String> map = new HashMap<>();
-        Pattern pattern = Pattern.compile("(\\d{18})=(\\d{18})");
-        for(Object s : config.getList((String) this.path, (List<?>) this.def)){
-            String string = s.toString();
-            Matcher matcher = pattern.matcher(string);
-            while(matcher.find()){
-                map.put(matcher.group(1), matcher.group(2));
-            }
+    public List<?> getList() {
+        List<String> strings = new ArrayList<>();
+        List<?> configList = config.getList((String) this.path, (List<?>) def);
+
+        for(Object o : configList){
+            strings.add(String.valueOf(o));
         }
-        return map;
+
+        // No, un return config.getList no funciona.
+        return strings;
     }
 }

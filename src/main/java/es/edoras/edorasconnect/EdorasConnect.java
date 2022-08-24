@@ -41,10 +41,14 @@ public final class EdorasConnect extends Plugin {
 
             // Iniciar bot de Discord
             // GatewayIntent para acceder a información más sensible
-            this.discord = JDABuilder.createDefault(ECConfig.DISCORD_TOKEN.getString(),
-                    GatewayIntent.GUILD_MEMBERS,
-                    GatewayIntent.GUILD_VOICE_STATES,
-                    GatewayIntent.GUILD_MESSAGES)
+            this.discord = JDABuilder.createDefault(
+                    ECConfig.DISCORD_TOKEN.getString(),
+                            GatewayIntent.GUILD_MEMBERS,
+                            GatewayIntent.GUILD_VOICE_STATES,
+                            GatewayIntent.GUILD_MESSAGES,
+                            GatewayIntent.MESSAGE_CONTENT,
+                            GatewayIntent.GUILD_EMOJIS_AND_STICKERS
+                    )
                     .addEventListeners(new DiscordEvents(this, mysql))
                     .setActivity(Activity.watching("Edoras"))
                     .build();
