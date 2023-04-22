@@ -1,14 +1,16 @@
 package es.edoras.edorasconnect;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class Utils {
     // Name - UUID
@@ -61,7 +63,8 @@ public class Utils {
     // OBTENCIÓN DE UUIDs
 
     // this.getUUID(String playername) y this.getXUID(String gamertag) fusionados
-    public static String getUniqueId(String playername) throws IOException {
+    // 2023: Método mejorable, fiarse de un catch es lo peor, pierdes el tiempo buscando errores
+    public static String getUniqueId(String playername) throws Exception {
         String playeruuid;
         try {
             // Obtener UUID de jugador de Java
@@ -82,7 +85,7 @@ public class Utils {
     }
 
     // Obtener XUID de jugadores Bedrock
-    public static String getXUID(String gamertag) throws IOException {
+    public static String getXUID(String gamertag) throws Exception {
         if(!cachedBedrockPlayers.containsKey(gamertag)){
             cachedBedrockPlayers.put(gamertag, Utils.requestXUID(gamertag));
         }
@@ -93,42 +96,113 @@ public class Utils {
 
     private static String requestName(String uuid) throws Exception {
         // Obtención de nombre
-        Scanner scanner = new Scanner(new URL("https://api.mojang.com/user/profiles/" + uuid + "/names").openConnection().getInputStream());
-        JsonArray json = new Gson().fromJson(scanner.next(), JsonArray.class);
-        scanner.close();
-        return json.get(json.size() - 1).getAsJsonObject().get("name").getAsString();
+        URL mojangGetName = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + uuid);
+        BufferedReader in = new BufferedReader(new InputStreamReader(mojangGetName.openStream()));
+
+        // JSON final
+        StringBuilder jsonRaw = new StringBuilder();
+
+        // Linea a linea hacemos un append al json final
+        String buffer;
+        while((buffer = in.readLine()) != null){
+            jsonRaw.append(buffer);
+        }
+        in.close();
+
+        // Aquí el JSON ya está entero, trabajamos con él
+        JsonObject json = new Gson().fromJson(jsonRaw.toString(), JsonObject.class);
+
+        // Nombre listo
+        return json.get("name").getAsString();
     }
 
     private static String requestGamertag(String rawxuid) throws Exception {
-        String hex = rawxuid.substring(19).replace("-", "");
-        BigInteger xuid = new BigInteger(hex, 16);
-        // Obtención de Gamertag
-        URL gamertagapi = new URL("https://xapi.us/v2/gamertag/" + xuid);
-        HttpURLConnection httpURLConnection = (HttpURLConnection) gamertagapi.openConnection();
-        httpURLConnection.setRequestProperty("X-AUTH", ECConfig.XAPI_TOKEN.getString());
-        Scanner scanner = new Scanner(httpURLConnection.getInputStream());
-        // scanner.next() devuelve String gamertag
-        return scanner.next();
+        try {
+
+            String hex = rawxuid.substring(19).replace("-", "");
+            BigInteger xuid = new BigInteger(hex, 16);
+
+            URL xboxGetGamertag = new URL("https://xbl.io/api/v2/account/" + xuid);
+
+            HttpURLConnection httpURLConnection = (HttpURLConnection) xboxGetGamertag.openConnection();
+            httpURLConnection.setRequestProperty("X-Authorization", ECConfig.XAPI_TOKEN.getString());
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+
+            // JSON final
+            StringBuilder jsonRaw = new StringBuilder();
+
+            // Linea a linea hacemos un append al json final
+            String buffer;
+            while((buffer = in.readLine()) != null){
+                jsonRaw.append(buffer);
+            }
+            in.close();
+
+            // Aquí el JSON ya está entero, trabajamos con él
+            JsonObject json = new Gson().fromJson(jsonRaw.toString(), JsonObject.class);
+
+            String gamertagObtained = json.getAsJsonArray("profileUsers").get(0).getAsJsonObject().getAsJsonArray("settings").get(2).getAsJsonObject().get("value").getAsString();
+            return gamertagObtained;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     private static String requestUUID(String name) throws Exception {
         // Obtención de UUID
-        Scanner scanner = new Scanner(new URL("https://api.mojang.com/users/profiles/minecraft/" + name).openConnection().getInputStream());
-        JsonObject json = new Gson().fromJson(scanner.next(), JsonObject.class);
-        scanner.close();
+        URL mojangGetUUID = new URL("https://api.mojang.com/users/profiles/minecraft/" + name);
+        BufferedReader in = new BufferedReader(new InputStreamReader(mojangGetUUID.openStream()));
+
+        // JSON final
+        StringBuilder jsonRaw = new StringBuilder();
+
+        // Linea a linea hacemos un append al json final
+        String buffer;
+        while((buffer = in.readLine()) != null){
+            jsonRaw.append(buffer);
+        }
+        in.close();
+
+        // Aquí el JSON ya está entero, trabajamos con él
+        JsonObject json = new Gson().fromJson(jsonRaw.toString(), JsonObject.class);
+
         // Se añaden los guiones de las UUID
         StringBuilder stringBuilder = new StringBuilder(json.get("id").getAsString());
         stringBuilder.insert(8, "-").insert(13, "-").insert(18, "-").insert(23, "-");
+
+        // UUID lista
         return stringBuilder.toString();
     }
 
-    private static String requestXUID(String gamertag) throws IOException {
-        URL gamertagapi = new URL("https://xapi.us/v2/xuid/" + gamertag);
-        HttpURLConnection httpURLConnection = (HttpURLConnection) gamertagapi.openConnection();
-        httpURLConnection.setRequestProperty("X-AUTH", ECConfig.XAPI_TOKEN.getString());
-        Scanner scanner = new Scanner(httpURLConnection.getInputStream());
-        String xuid = scanner.next();
-        scanner.close();
-        return new UUID(0, Long.parseLong(xuid)).toString();
+    private static String requestXUID(String gamertag) throws Exception {
+        URL xboxGetXUID = new URL("https://xbl.io/api/v2/search/" + gamertag.substring(1));
+
+        HttpURLConnection httpURLConnection = (HttpURLConnection) xboxGetXUID.openConnection();
+        httpURLConnection.setRequestProperty("X-Authorization", ECConfig.XAPI_TOKEN.getString());
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream()));
+
+        // JSON final
+        StringBuilder jsonRaw = new StringBuilder();
+
+        // Linea a linea hacemos un append al json final
+        String buffer;
+        while((buffer = in.readLine()) != null){
+            jsonRaw.append(buffer);
+        }
+        in.close();
+
+        // Aquí el JSON ya está entero, trabajamos con él
+        JsonObject json = new Gson().fromJson(jsonRaw.toString(), JsonObject.class);
+
+        String gamertagObtained = json.getAsJsonArray("people").get(0).getAsJsonObject().get("gamertag").getAsString();
+        if(gamertag.substring(1).equalsIgnoreCase(gamertagObtained)){
+            String xuid = json.getAsJsonArray("people").get(0).getAsJsonObject().get("xuid").getAsString();
+            return new UUID(0, Long.parseLong(xuid)).toString();
+        } else {
+            throw new Exception("Bedrock player not found. Obtained " + gamertagObtained + ", expected " + gamertag);
+        }
     }
 }
