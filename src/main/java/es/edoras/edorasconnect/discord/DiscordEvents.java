@@ -5,21 +5,22 @@ import es.edoras.edorasconnect.ECMessages;
 import es.edoras.edorasconnect.EdorasConnect;
 import es.edoras.edorasconnect.Utils;
 import net.dv8tion.jda.api.Permission;
-import net.dv8tion.jda.api.entities.*;
-import net.dv8tion.jda.api.events.ReadyEvent;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceMoveEvent;
-import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
-import net.dv8tion.jda.api.interactions.commands.build.CommandData;
-import net.dv8tion.jda.api.interactions.components.Button;
-import net.md_5.bungee.api.ProxyServer;
+import net.dv8tion.jda.api.interactions.commands.build.Commands;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -27,7 +28,6 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -55,10 +55,14 @@ public class DiscordEvents extends ListenerAdapter {
         // Limpiar y registrar comandos de la guild de Edoras
         // Vinculación
         Guild guild = event.getJDA().getGuildById(ECConfig.DISCORD_GUILD.getString());
+        if(guild == null){
+            this.plugin.getProxy().getLogger().severe("Discord guild is null! Is the id correct?");
+            return;
+        }
         guild.updateCommands().queue();
         guild.updateCommands().addCommands(
-                new CommandData("vincular", ECMessages.DISCORD_LINK_DESCRIPTION.getString()).addOption(OptionType.STRING, "nick", ECMessages.DISCORD_LINK_NICK_OPTION_DESCRIPTION.getString(), true),
-                new CommandData("desvincular", ECMessages.DISCORD_UNLINK_DESCRIPTION.getString())
+                Commands.slash("vincular", ECMessages.DISCORD_LINK_DESCRIPTION.getString()).addOption(OptionType.STRING, "nick", ECMessages.DISCORD_LINK_NICK_OPTION_DESCRIPTION.getString(), true),
+                Commands.slash("desvincular", ECMessages.DISCORD_UNLINK_DESCRIPTION.getString())
         ).queue();
 
         // Comprobar que todos los Socios están vinculados
@@ -66,7 +70,7 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     @Override
-    public void onSlashCommand(@NotNull SlashCommandEvent event) {
+    public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         if(event.getGuild() == null){
             return;
         }
@@ -77,7 +81,7 @@ public class DiscordEvents extends ListenerAdapter {
         switch(event.getName()){
             case "vincular":
                 // Comprobar que el proceso se hace en el canal correcto
-                if(this.correctChannel(event.getTextChannel())){
+                if(this.correctChannel(event.getChannel().asTextChannel())){
                     // Try por posibles fallos en la base de datos
                     try {
                         // Comprobar que la cuenta no está vinculada
@@ -120,7 +124,7 @@ public class DiscordEvents extends ListenerAdapter {
                 break;
             case "desvincular":
                 // Comprobar que el proceso se hace en el canal correcto
-                if(this.correctChannel(event.getTextChannel())) {
+                if(this.correctChannel(event.getChannel().asTextChannel())) {
                     // Try por posibles fallos en la base de datos
                     try {
                         // Comprobar que la cuenta está vinculada
@@ -161,63 +165,68 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     @Override
-    public void onGuildVoiceJoin(@NotNull GuildVoiceJoinEvent event){
-        // Historial de conexiones
-        TextChannel logchannel = event.getGuild().getTextChannelById(ECConfig.DISCORD_LOG_CHANNEL.getString());
-        logchannel.sendMessage(ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString().replace("{voicechannel}", event.getChannelJoined().getName()).replace("{user}", event.getMember().getUser().getName()).replace("{discriminator}", event.getMember().getUser().getDiscriminator())).queue();
+    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event){
+        // Move
+        if(event.getChannelLeft() != null && event.getChannelJoined() != null){
+            // Historial de conexiones
+            TextChannel logchannel = event.getGuild().getTextChannelById(ECConfig.DISCORD_LOG_CHANNEL.getString());
+            if(logchannel != null){
+                logchannel.sendMessage(ECMessages.DISCORD_LOG_MEMBER_MOVED_VOICE_CHANNEL.getString().replace("{oldvoicechannel}", event.getChannelLeft().getName()).replace("{newvoicechannel}", event.getChannelJoined().getName()).replace("{user}", event.getMember().getUser().getName()).replace("{discriminator}", event.getMember().getUser().getDiscriminator())).queue();
+            }
 
-        // Enviar mensajes a los miembros de canal dentro del servidor (solo si esta vinculado)
-        User user = event.getMember().getUser();
+            // Enviar mensajes a los miembros de canal dentro del servidor (solo si esta vinculado)
+            User user = event.getMember().getUser();
 
-        // Enviar mensaje al canal de texto sobre la acción del usuario
-        this.sendPublicLogMessage(event.getChannelJoined(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
+            // Enviar mensaje al canal de texto sobre la acción del usuario
+            this.sendPublicLogMessage(event.getChannelJoined().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
+            // Si el canal de voz queda vacio, ahorrar mensaje
+            if(!event.getChannelLeft().getMembers().isEmpty()) {
+                this.sendPublicLogMessage(event.getChannelLeft().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
+            }
 
-        // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
-        this.sendMessage(event.getChannelJoined().getMembers(), event.getChannelJoined(), user, ECMessages.MINECRAFT_VOICECHANNEL_JOIN.getMinecraftString());
-    }
+            // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
+            this.sendMessage(event.getChannelJoined().getMembers(), event.getChannelJoined().asVoiceChannel(), user, ECMessages.MINECRAFT_VOICECHANNEL_JOIN.getMinecraftString());
+            this.sendMessage(event.getChannelLeft().getMembers(), event.getChannelLeft().asVoiceChannel(), user, ECMessages.MINECRAFT_VOICECHANNEL_LEAVE.getMinecraftString());
+        } else if(event.getChannelLeft() == null && event.getChannelJoined() != null){
+            // Join
+            // Historial de conexiones
+            TextChannel logchannel = event.getGuild().getTextChannelById(ECConfig.DISCORD_LOG_CHANNEL.getString());
+            if(logchannel != null){
+                logchannel.sendMessage(ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString().replace("{voicechannel}", event.getChannelJoined().getName()).replace("{user}", event.getMember().getUser().getName()).replace("{discriminator}", event.getMember().getUser().getDiscriminator())).queue();
+            }
 
-    @Override
-    public void onGuildVoiceMove(@NotNull GuildVoiceMoveEvent event){
-        // Historial de conexiones
-        TextChannel logchannel = event.getGuild().getTextChannelById(ECConfig.DISCORD_LOG_CHANNEL.getString());
-        logchannel.sendMessage(ECMessages.DISCORD_LOG_MEMBER_MOVED_VOICE_CHANNEL.getString().replace("{oldvoicechannel}", event.getChannelLeft().getName()).replace("{newvoicechannel}", event.getChannelJoined().getName()).replace("{user}", event.getMember().getUser().getName()).replace("{discriminator}", event.getMember().getUser().getDiscriminator())).queue();
+            // Enviar mensajes a los miembros de canal dentro del servidor (solo si esta vinculado)
+            User user = event.getMember().getUser();
 
-        // Enviar mensajes a los miembros de canal dentro del servidor (solo si esta vinculado)
-        User user = event.getMember().getUser();
+            // Enviar mensaje al canal de texto sobre la acción del usuario
+            this.sendPublicLogMessage(event.getChannelJoined().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
 
-        // Enviar mensaje al canal de texto sobre la acción del usuario
-        this.sendPublicLogMessage(event.getChannelJoined(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
-        // Si el canal de voz queda vacio, ahorrar mensaje
-        if(!event.getChannelLeft().getMembers().isEmpty()) {
-            this.sendPublicLogMessage(event.getChannelLeft(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
+            // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
+            this.sendMessage(event.getChannelJoined().getMembers(), event.getChannelJoined().asVoiceChannel(), user, ECMessages.MINECRAFT_VOICECHANNEL_JOIN.getMinecraftString());
+        } else if (event.getChannelLeft() != null && event.getChannelJoined() == null){
+            // Leave
+            // Historial de conexiones
+            TextChannel logchannel = event.getGuild().getTextChannelById(ECConfig.DISCORD_LOG_CHANNEL.getString());
+            if(logchannel != null){
+                logchannel.sendMessage(ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString().replace("{voicechannel}", event.getChannelLeft().getName()).replace("{user}", event.getMember().getUser().getName()).replace("{discriminator}", event.getMember().getUser().getDiscriminator())).queue();
+            }
+
+            // Enviar mensajes a los miembros de canal dentro del servidor (solo si esta vinculado)
+            User user = event.getMember().getUser();
+
+            // Enviar mensaje al canal de texto sobre la acción del usuario
+            // Si el canal de voz queda vacio, ahorrar mensaje
+            if(!event.getChannelLeft().getMembers().isEmpty()) {
+                this.sendPublicLogMessage(event.getChannelLeft().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
+            }
+
+            // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
+            this.sendMessage(event.getChannelLeft().getMembers(), event.getChannelLeft().asVoiceChannel(), user, ECMessages.MINECRAFT_VOICECHANNEL_LEAVE.getMinecraftString());
         }
-
-        // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
-        this.sendMessage(event.getChannelJoined().getMembers(), event.getChannelJoined(), user, ECMessages.MINECRAFT_VOICECHANNEL_JOIN.getMinecraftString());
-        this.sendMessage(event.getChannelLeft().getMembers(), event.getChannelLeft(), user, ECMessages.MINECRAFT_VOICECHANNEL_LEAVE.getMinecraftString());
     }
 
     @Override
-    public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event){
-        // Historial de conexiones
-        TextChannel logchannel = event.getGuild().getTextChannelById(ECConfig.DISCORD_LOG_CHANNEL.getString());
-        logchannel.sendMessage(ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString().replace("{voicechannel}", event.getChannelLeft().getName()).replace("{user}", event.getMember().getUser().getName()).replace("{discriminator}", event.getMember().getUser().getDiscriminator())).queue();
-
-        // Enviar mensajes a los miembros de canal dentro del servidor (solo si esta vinculado)
-        User user = event.getMember().getUser();
-
-        // Enviar mensaje al canal de texto sobre la acción del usuario
-        // Si el canal de voz queda vacio, ahorrar mensaje
-        if(!event.getChannelLeft().getMembers().isEmpty()) {
-            this.sendPublicLogMessage(event.getChannelLeft(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
-        }
-
-        // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
-        this.sendMessage(event.getChannelLeft().getMembers(), event.getChannelLeft(), user, ECMessages.MINECRAFT_VOICECHANNEL_LEAVE.getMinecraftString());
-    }
-
-    @Override
-    public void onGuildMessageReceived(@NotNull GuildMessageReceivedEvent event){
+    public void onMessageReceived(@NotNull MessageReceivedEvent event){
         // Ignorar bots y sistema
         if(event.getAuthor().isBot() || event.getAuthor().isSystem()){
             return;
