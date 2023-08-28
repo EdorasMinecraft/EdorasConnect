@@ -12,11 +12,15 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.unions.AudioChannelUnion;
+import net.dv8tion.jda.api.entities.channel.unions.MessageChannelUnion;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
+import net.dv8tion.jda.api.events.guild.voice.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
+import net.dv8tion.jda.api.events.user.UserActivityEndEvent;
+import net.dv8tion.jda.api.events.user.UserActivityStartEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -165,6 +169,68 @@ public class DiscordEvents extends ListenerAdapter {
         }
     }
 
+    private void sendMinecraftMessageToVoiceMembers(User user, AudioChannelUnion channel, ECMessages enableStatus, ECMessages disableStatus, boolean condition){
+        // Si no hay canal asociado, paramos directamente
+        if(channel == null) return;
+
+        // Comprobar si se puede obtener el nombre de Minecraft (si está vinculado y los servidores de Mojang funcionan)
+        String playername;
+
+        try {
+            if(this.isDiscordLinked(user.getId())){
+                String playeruuid = this.getMinecraftUUIDfromDatabase(user.getId());
+                playername = Utils.getName(playeruuid);
+            } else {
+                playername = user.getName() + "#" + user.getDiscriminator();
+            }
+        } catch (Exception e) {
+            // En caso de algún error, usar nombre y discriminador de Discord
+            playername = user.getName() + "#" + user.getDiscriminator();
+        }
+
+        // Enviar mensaje en Minecraft a todos los usuarios del canal de voz
+        for(Member member : channel.asVoiceChannel().getMembers()){
+            String snowflake = member.getUser().getId();
+            // Enviar mensaje a los usuarios vinculados
+            try {
+                if(this.isDiscordLinked(snowflake)){
+                    String playeruuid = this.getMinecraftUUIDfromDatabase(snowflake);
+                    // Enviar mensaje si el usuario está conectado
+                    ProxiedPlayer player;
+                    if(playeruuid != null && (player = plugin.getProxy().getPlayer(UUID.fromString(playeruuid))) != null){
+                        if(condition) {
+                            player.sendMessage(TextComponent.fromLegacyText(enableStatus.getMinecraftString().replace("{user}", playername)));
+                        } else {
+                            player.sendMessage(TextComponent.fromLegacyText(disableStatus.getMinecraftString().replace("{user}", playername)));
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void onGuildVoiceDeafen(@NotNull GuildVoiceDeafenEvent event){
+        this.sendMinecraftMessageToVoiceMembers(event.getMember().getUser(), event.getVoiceState().getChannel(), ECMessages.MINECRAFT_DISCORD_USER_DEAFEN, ECMessages.MINECRAFT_DISCORD_USER_UNDEAFEN, event.isDeafened());
+    }
+
+    @Override
+    public void onGuildVoiceMute(@NotNull GuildVoiceMuteEvent event){
+        this.sendMinecraftMessageToVoiceMembers(event.getMember().getUser(), event.getVoiceState().getChannel(), ECMessages.MINECRAFT_DISCORD_USER_MUTED, ECMessages.MINECRAFT_DISCORD_USER_UNMUTED, event.isMuted());
+    }
+
+    @Override
+    public void onGuildVoiceStream(@NotNull GuildVoiceStreamEvent event){
+        this.sendMinecraftMessageToVoiceMembers(event.getMember().getUser(), event.getVoiceState().getChannel(), ECMessages.MINECRAFT_DISCORD_USER_STREAM_ON, ECMessages.MINECRAFT_DISCORD_USER_STREAM_OFF, event.isStream());
+    }
+
+    @Override
+    public void onGuildVoiceVideo(@NotNull GuildVoiceVideoEvent event){
+        this.sendMinecraftMessageToVoiceMembers(event.getMember().getUser(), event.getVoiceState().getChannel(), ECMessages.MINECRAFT_DISCORD_USER_VIDEO_ON, ECMessages.MINECRAFT_DISCORD_USER_VIDEO_OFF, event.isSendingVideo());
+    }
+
     @Override
     public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event){
         // Move
@@ -179,10 +245,10 @@ public class DiscordEvents extends ListenerAdapter {
             User user = event.getMember().getUser();
 
             // Enviar mensaje al canal de texto sobre la acción del usuario
-            this.sendPublicLogMessage(event.getChannelJoined().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
+            this.sendPublicLogMessage(event.getChannelJoined(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
             // Si el canal de voz queda vacio, ahorrar mensaje
             if(!event.getChannelLeft().getMembers().isEmpty()) {
-                this.sendPublicLogMessage(event.getChannelLeft().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
+                this.sendPublicLogMessage(event.getChannelLeft(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
             }
 
             // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
@@ -200,7 +266,7 @@ public class DiscordEvents extends ListenerAdapter {
             User user = event.getMember().getUser();
 
             // Enviar mensaje al canal de texto sobre la acción del usuario
-            this.sendPublicLogMessage(event.getChannelJoined().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
+            this.sendPublicLogMessage(event.getChannelJoined(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_JOINED_VOICE_CHANNEL.getString());
 
             // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
             this.sendMessage(event.getChannelJoined().getMembers(), event.getChannelJoined().asVoiceChannel(), user, ECMessages.MINECRAFT_VOICECHANNEL_JOIN.getMinecraftString());
@@ -218,7 +284,7 @@ public class DiscordEvents extends ListenerAdapter {
             // Enviar mensaje al canal de texto sobre la acción del usuario
             // Si el canal de voz queda vacio, ahorrar mensaje
             if(!event.getChannelLeft().getMembers().isEmpty()) {
-                this.sendPublicLogMessage(event.getChannelLeft().asVoiceChannel(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
+                this.sendPublicLogMessage(event.getChannelLeft(), event.getGuild(), user, ECMessages.DISCORD_LOG_MEMBER_LEFT_VOICE_CHANNEL.getString());
             }
 
             // Enviar mensaje por Minecraft, a los usuarios del canal de voz, de la acción del usuario
@@ -238,66 +304,57 @@ public class DiscordEvents extends ListenerAdapter {
             event.getMessage().delete().queue();
         }
 
-        // Si el canal está definido en la configuración, enviar mensaje del usuario por Minecraft
-        Map<String, String> linkedchannels = ECConfig.DISCORD_LINKED_CHANNELS_MAP.getMap();
+        // Si el mensaje es de un canal de voz, enviar mensaje del usuario por Minecraft
         User user = event.getAuthor();
-        if(linkedchannels.containsKey(event.getChannel().getId())){
-            // Obtener canal de voz asociado al canal de texto
-            VoiceChannel voiceChannel = event.getJDA().getVoiceChannelById(linkedchannels.get(event.getChannel().getId()));
-            // Comprobar si se puede obtener el nombre de Minecraft (si está vinculado y los servidores de Mojang funcionan)
-            String playername;
-            try {
-                if(this.isDiscordLinked(user.getId())){
-                    String playeruuid = this.getMinecraftUUIDfromDatabase(user.getId());
-                    playername = Utils.getName(playeruuid);
-                } else {
-                    playername = user.getName() + "#" + user.getDiscriminator();
-                }
-            } catch (Exception e) {
-                // En caso de algún error, usar nombre y discriminador de Discord
+
+        // Obtener canal de voz asociado al canal de texto
+        VoiceChannel voiceChannel = event.getChannel().asVoiceChannel();
+        // Comprobar si se puede obtener el nombre de Minecraft (si está vinculado y los servidores de Mojang funcionan)
+        String playername;
+        try {
+            if(this.isDiscordLinked(user.getId())){
+                String playeruuid = this.getMinecraftUUIDfromDatabase(user.getId());
+                playername = Utils.getName(playeruuid);
+            } else {
                 playername = user.getName() + "#" + user.getDiscriminator();
             }
-            // Enviar mensaje en Minecraft a todos los usuarios del canal de voz
-            for(Member member : voiceChannel.getMembers()){
-                String snowflake = member.getUser().getId();
-                // Enviar mensaje a los usuarios vinculados
-                try {
-                    if(this.isDiscordLinked(snowflake)){
-                        String playeruuid = this.getMinecraftUUIDfromDatabase(snowflake);
-                        // Enviar mensaje si el usuario está conectado
-                        ProxiedPlayer player;
-                        if((player = plugin.getProxy().getPlayer(UUID.fromString(playeruuid))) != null){
-                            Message message = event.getMessage();
-                            if(message.getAttachments().isEmpty()) {
-                                player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_DISCORD_USER_MESSAGE.getMinecraftString().replace("{message}", message.getContentRaw()).replace("{user}", playername)));
-                            } else if(message.getAttachments().size() == 1){
-                                player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_DISCORD_USER_MESSAGE_WITH_FILE.getMinecraftString().replace("{message}", !message.getContentRaw().isEmpty() ? message.getContentRaw() : ECMessages.MINECRAFT_DISCORD_NO_MESSAGE.getMinecraftString()).replace("{file}", message.getAttachments().get(0).getFileName()).replace("{user}", playername)));
-                            }
+        } catch (Exception e) {
+            // En caso de algún error, usar nombre y discriminador de Discord
+            playername = user.getName() + "#" + user.getDiscriminator();
+        }
+        // Enviar mensaje en Minecraft a todos los usuarios del canal de voz
+        for(Member member : voiceChannel.getMembers()){
+            String snowflake = member.getUser().getId();
+            // Enviar mensaje a los usuarios vinculados
+            try {
+                if(this.isDiscordLinked(snowflake)){
+                    String playeruuid = this.getMinecraftUUIDfromDatabase(snowflake);
+                    // Enviar mensaje si el usuario está conectado
+                    ProxiedPlayer player;
+                    if((player = plugin.getProxy().getPlayer(UUID.fromString(playeruuid))) != null){
+                        Message message = event.getMessage();
+                        if(!message.getContentRaw().isEmpty() && message.getAttachments().isEmpty()) {
+                            player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_DISCORD_USER_MESSAGE.getMinecraftString().replace("{message}", message.getContentRaw()).replace("{user}", playername)));
+                            plugin.getLogger().info(ECMessages.MINECRAFT_DISCORD_USER_MESSAGE.getMinecraftString().replace("{message}", message.getContentRaw()).replace("{user}", playername));
+                        } else if(message.getAttachments().size() >= 1){
+                            player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_DISCORD_USER_MESSAGE_WITH_FILE.getMinecraftString().replace("{message}", !message.getContentRaw().isEmpty() ? message.getContentRaw() : ECMessages.MINECRAFT_DISCORD_NO_MESSAGE.getMinecraftString()).replace("{file}", message.getAttachments().get(0).getFileName()).replace("{user}", playername)));
+                            plugin.getLogger().info(ECMessages.MINECRAFT_DISCORD_USER_MESSAGE_WITH_FILE.getMinecraftString().replace("{message}", !message.getContentRaw().isEmpty() ? message.getContentRaw() : ECMessages.MINECRAFT_DISCORD_NO_MESSAGE.getMinecraftString()).replace("{file}", message.getAttachments().get(0).getFileName()).replace("{user}", playername));
+                        } else {
+                            player.sendMessage(TextComponent.fromLegacyText(ECMessages.MINECRAFT_DISCORD_USER_UNKNOWN_MESSAGE.getMinecraftString().replace("{user}", playername)));
+                            plugin.getLogger().info(ECMessages.MINECRAFT_DISCORD_USER_UNKNOWN_MESSAGE.getMinecraftString().replace("{user}", playername));
                         }
                     }
-                } catch (SQLException e) {
-                    e.printStackTrace();
                 }
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    private void sendPublicLogMessage(VoiceChannel voiceChannel, Guild guild, User useraction, String message){
-        // Obtener canal de texto asociado al canal de voz
-        String textChannelID = null;
-        Map<String, String> map = ECConfig.DISCORD_LINKED_CHANNELS_MAP.getMap();
-        for(String o : map.keySet()){
-            if(map.get(o).equals(voiceChannel.getId())){
-                textChannelID = o;
-            }
-        }
-        // Obtener canal de texto con la ID obtenida y enviar mensaje si existe
-        if(textChannelID != null) {
-            TextChannel textChannel = guild.getTextChannelById(textChannelID);
-            if (textChannel != null) {
-                textChannel.sendMessage(message.replace("{voicechannel}", voiceChannel.getName()).replace("{user}", useraction.getName()).replace("{discriminator}", useraction.getDiscriminator())).queue();
-            }
-        }
+    private void sendPublicLogMessage(AudioChannelUnion channel, Guild guild, User useraction, String message){
+        // Manda los cambios de estado de un chat de voz (gente que se une, que se va, etc) a su chat de texto
+        plugin.getLogger().info(message.replace("{voicechannel}", channel.getName()).replace("{user}", useraction.getName()).replace("{discriminator}", useraction.getDiscriminator()));
+        channel.asGuildMessageChannel().sendMessage(message.replace("{voicechannel}", channel.getName()).replace("{user}", useraction.getName()).replace("{discriminator}", useraction.getDiscriminator())).queue();
     }
 
     // Enviar mensajes a los miembros del canal de que un usuario se ha unido/ido

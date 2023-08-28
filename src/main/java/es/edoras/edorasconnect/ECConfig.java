@@ -32,7 +32,6 @@ public enum ECConfig {
     LINK_EXPIRATION("link.link-expiration", 300),
     UNLINK_EXPIRATION("link.unlink-expiration", 120),
     DISCORD_LINK_CHANNEL("link-channel", "695992710699679794"),
-    DISCORD_LINKED_CHANNELS_MAP("linked-channels-map", new ArrayList<>()),
     DISCORD_LOG_CHANNEL("log-channel", "708762845428449351")
     ;
 
