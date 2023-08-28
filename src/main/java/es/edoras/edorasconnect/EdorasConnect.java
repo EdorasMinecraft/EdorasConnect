@@ -1,5 +1,7 @@
 package es.edoras.edorasconnect;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import es.edoras.edorasconnect.discord.DiscordEvents;
 import es.edoras.edorasconnect.minecraft.commands.DiscordCommands;
 import net.dv8tion.jda.api.JDA;
@@ -26,7 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 public final class EdorasConnect extends Plugin {
-    public Connection mysql;
+    HikariDataSource hikari;
     public JDA discord;
 
     @Override
@@ -35,33 +37,30 @@ public final class EdorasConnect extends Plugin {
         ECConfig.setConfig(this.getConfig("config.yml"));
         ECMessages.setMessages(this.getConfig("messages.yml"));
 
-        try {
-            // Iniciar conexión con la base de datos (MySQL)
-            this.openConnection();
+        // Iniciar conexión con la base de datos (MySQL)
+        this.openConnection();
 
-            // Iniciar bot de Discord
-            // GatewayIntent para acceder a información más sensible
-            this.discord = JDABuilder.createDefault(ECConfig.DISCORD_TOKEN.getString(),
-                    GatewayIntent.GUILD_MEMBERS,
-                    GatewayIntent.GUILD_VOICE_STATES,
-                    GatewayIntent.GUILD_EMOJIS_AND_STICKERS,
-                    GatewayIntent.GUILD_MESSAGES)
-                    .addEventListeners(new DiscordEvents(this, mysql))
-                    .setActivity(Activity.watching("Edoras"))
-                    .build();
-        } catch (ClassNotFoundException | SQLException e) {
-            e.printStackTrace();
-        }
+        // Iniciar bot de Discord
+        // GatewayIntent para acceder a información más sensible
+        this.discord = JDABuilder.createDefault(ECConfig.DISCORD_TOKEN.getString(),
+                GatewayIntent.GUILD_MEMBERS,
+                GatewayIntent.GUILD_VOICE_STATES,
+                GatewayIntent.GUILD_EMOJIS_AND_STICKERS,
+                GatewayIntent.GUILD_MESSAGES)
+                .addEventListeners(new DiscordEvents(this, hikari))
+                .setActivity(Activity.watching("Edoras"))
+                .build();
 
         // Iniciar bot de Telegram
 
         // Minecraft
         // Registrar comandos
-        this.getProxy().getPluginManager().registerCommand(this, new DiscordCommands(this, discord, mysql));
+        this.getProxy().getPluginManager().registerCommand(this, new DiscordCommands(this, discord, hikari));
     }
 
     @Override
     public void onDisable() {
+        hikari.close();
         discord.shutdownNow();
     }
 
@@ -84,17 +83,18 @@ public final class EdorasConnect extends Plugin {
         }
     }
 
-    public void openConnection() throws SQLException, ClassNotFoundException {
-        if (mysql != null && !mysql.isClosed()) {
-            return;
-        }
+    public void openConnection() {
+        HikariConfig config = new HikariConfig();
+        config.setPoolName("EdorasConnect-pool");
+        config.setJdbcUrl("jdbc:mysql://" + ECConfig.DATABASE_HOST.getString() + ":" + ECConfig.DATABASE_PORT.getInteger() + "/" + ECConfig.DATABASE_DATABASE.getString());
+        config.setUsername(ECConfig.DATABASE_USER.getString());
+        config.setPassword(ECConfig.DATABASE_PASSWORD.getString());
+        config.addDataSourceProperty("cachePrepStmts", "true");
+        config.addDataSourceProperty("useServerPrepStmts", "true");
+        config.addDataSourceProperty("prepStmtCacheSize", "250");
+        config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
 
-        synchronized(this){
-            if (mysql != null && !mysql.isClosed()) {
-                return;
-            }
-            mysql = DriverManager.getConnection("jdbc:mysql://" + ECConfig.DATABASE_HOST.getString() + ":" + ECConfig.DATABASE_PORT.getInteger() + "/" + ECConfig.DATABASE_DATABASE.getString(), ECConfig.DATABASE_USER.getString(), ECConfig.DATABASE_PASSWORD.getString());
-        }
+        this.hikari = new HikariDataSource(config);
     }
 
     public void checkMembersWithLinkedRole(){
@@ -103,12 +103,16 @@ public final class EdorasConnect extends Plugin {
         Role linkedRole = Objects.requireNonNull(guild.getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString()), "Role must not be null");
         List<String> linkedAccounts = new ArrayList<>();
         try {
+            Connection connection = hikari.getConnection();
             // Obtener cuentas vinculadas de la base de datos
-            ResultSet linkedAccountsQuery = mysql.createStatement().executeQuery("SELECT discord FROM edorasconnect_discord;");
+            ResultSet linkedAccountsQuery = connection.createStatement().executeQuery("SELECT discord FROM edorasconnect_discord;");
             while(linkedAccountsQuery.next()){
                 // Añadir resultados a la lista inicial para compararla después
                 linkedAccounts.add(linkedAccountsQuery.getString("discord"));
             }
+            // Cerramos la base de datos
+            linkedAccountsQuery.close();
+            connection.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }

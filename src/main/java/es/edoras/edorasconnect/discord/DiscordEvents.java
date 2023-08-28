@@ -1,5 +1,6 @@
 package es.edoras.edorasconnect.discord;
 
+import com.zaxxer.hikari.HikariDataSource;
 import es.edoras.edorasconnect.ECConfig;
 import es.edoras.edorasconnect.ECMessages;
 import es.edoras.edorasconnect.EdorasConnect;
@@ -40,11 +41,11 @@ import java.util.concurrent.TimeUnit;
 
 public class DiscordEvents extends ListenerAdapter {
     private final EdorasConnect plugin;
-    private final Connection mysql;
+    private final HikariDataSource hikari;
 
-    public DiscordEvents(EdorasConnect plugin, Connection mysql){
+    public DiscordEvents(EdorasConnect plugin, HikariDataSource hikari){
         this.plugin = plugin;
-        this.mysql = mysql;
+        this.hikari = hikari;
     }
 
     @Override
@@ -337,7 +338,8 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     private String getMinecraftUUIDfromDatabase(String snowflake) throws SQLException {
-        PreparedStatement preparedStatement = mysql.prepareStatement("SELECT minecraft FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement("SELECT minecraft FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         preparedStatement.setString(1, snowflake);
         ResultSet resultSet = preparedStatement.executeQuery();
         if(resultSet.first()){
@@ -345,8 +347,13 @@ public class DiscordEvents extends ListenerAdapter {
             // Closing database resources
             preparedStatement.close();
             resultSet.close();
+            connection.close();
             return uuid;
         } else {
+            // Closing database resources
+            preparedStatement.close();
+            resultSet.close();
+            connection.close();
             return null;
         }
     }
@@ -356,7 +363,8 @@ public class DiscordEvents extends ListenerAdapter {
     }
 
     private boolean isDiscordLinked(String snowflake) throws SQLException {
-        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement statement = connection.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, snowflake);
         statement.execute();
         ResultSet result = statement.getResultSet();
@@ -364,11 +372,13 @@ public class DiscordEvents extends ListenerAdapter {
         // Closing database resources and return if the account is linked
         statement.close();
         result.close();
+        connection.close();
         return linked;
     }
 
     private boolean hasReachedLimit(String uuid) throws SQLException {
-        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement statement = connection.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, uuid);
         statement.execute();
         ResultSet result = statement.getResultSet();
@@ -377,6 +387,7 @@ public class DiscordEvents extends ListenerAdapter {
         // Closing database resources
         statement.close();
         result.close();
+        connection.close();
         return limitReached;
     }
 
@@ -396,11 +407,13 @@ public class DiscordEvents extends ListenerAdapter {
 
     private boolean unlink(Guild guild, Member member){
         try {
-            PreparedStatement statement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+            Connection connection = hikari.getConnection();
+            PreparedStatement statement = connection.prepareStatement("DELETE FROM edorasconnect_discord WHERE discord = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
             statement.setString(1, member.getId());
             statement.executeUpdate();
             guild.removeRoleFromMember(member, Objects.requireNonNull(guild.getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString()), "Role could not be found (null)")).queue();
             statement.close();
+            connection.close();
             return true;
         } catch (SQLException | NullPointerException e) {
             e.printStackTrace();

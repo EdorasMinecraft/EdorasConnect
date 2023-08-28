@@ -1,5 +1,6 @@
 package es.edoras.edorasconnect.minecraft.commands;
 
+import com.zaxxer.hikari.HikariDataSource;
 import es.edoras.edorasconnect.ECConfig;
 import es.edoras.edorasconnect.ECMessages;
 import es.edoras.edorasconnect.EdorasConnect;
@@ -31,13 +32,13 @@ import java.util.concurrent.TimeUnit;
 public class DiscordCommands extends Command implements TabExecutor {
     private final EdorasConnect minecraft;
     private final JDA discord;
-    private final Connection mysql;
+    private final HikariDataSource hikari;
 
-    public DiscordCommands(EdorasConnect minecraft, JDA discord, Connection mysql) {
+    public DiscordCommands(EdorasConnect minecraft, JDA discord, HikariDataSource hikari) {
         super("discord", "edorasconnect.link", "edorasconnect");
         this.minecraft = minecraft;
         this.discord = discord;
-        this.mysql = mysql;
+        this.hikari = hikari;
     }
 
     @Override
@@ -166,12 +167,14 @@ public class DiscordCommands extends Command implements TabExecutor {
 
     private void link(String snowflake, String uuid) throws SQLException {
         // Añadir registro a la base de datos
-        PreparedStatement statement = mysql.prepareStatement("INSERT INTO edorasconnect_discord (discord, minecraft) VALUES (?, ?);", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement statement = connection.prepareStatement("INSERT INTO edorasconnect_discord (discord, minecraft) VALUES (?, ?);", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, snowflake);
         statement.setString(2, uuid);
         statement.executeUpdate();
         // Closing database resources
         statement.close();
+        connection.close();
         // Añadir rol al usuario
         Guild guild = discord.getGuildById(ECConfig.DISCORD_GUILD.getString());
         Role role = Objects.requireNonNull(guild, "Guild must not be null").getRoleById(ECConfig.DISCORD_MEMBER_ROLE.getString());
@@ -180,7 +183,8 @@ public class DiscordCommands extends Command implements TabExecutor {
 
     private void unlink(String uuid) throws SQLException {
         // Eliminar rol de todas las cuentas vinculadas
-        PreparedStatement statement = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement statement = connection.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, uuid);
         if (statement.execute()) {
             ResultSet resultSet = statement.getResultSet();
@@ -199,20 +203,23 @@ public class DiscordCommands extends Command implements TabExecutor {
         statement.close();
 
         // Eliminar registros
-        PreparedStatement deleteStatement = mysql.prepareStatement("DELETE FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        PreparedStatement deleteStatement = connection.prepareStatement("DELETE FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         deleteStatement.setString(1, uuid);
         deleteStatement.executeUpdate();
         // Closing database resources
         deleteStatement.close();
+        connection.close();
     }
 
     private boolean isDiscordLinked(@NotNull String uuid) throws SQLException {
-        PreparedStatement statement = mysql.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement statement = connection.prepareStatement("SELECT NULL FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         statement.setString(1, uuid);
         statement.execute();
         ResultSet result = statement.getResultSet();
         boolean linked = result.first();
         statement.close();
+        connection.close();
         return linked;
     }
 
@@ -220,7 +227,8 @@ public class DiscordCommands extends Command implements TabExecutor {
         List<String> snowflakes = new ArrayList<>();
         String playeruuid = Utils.getUniqueId(playername);
         // Consultar Snowflake en la base de datos con la ID obtenida
-        PreparedStatement getSnowflakeQuery = mysql.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        Connection connection = hikari.getConnection();
+        PreparedStatement getSnowflakeQuery = connection.prepareStatement("SELECT discord FROM edorasconnect_discord WHERE minecraft = ?;", ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
         getSnowflakeQuery.setString(1, playeruuid);
         getSnowflakeQuery.execute();
         ResultSet resultSet = getSnowflakeQuery.getResultSet();
@@ -230,6 +238,7 @@ public class DiscordCommands extends Command implements TabExecutor {
         // Closing database resources
         resultSet.close();
         getSnowflakeQuery.close();
+        connection.close();
         return snowflakes;
     }
 
